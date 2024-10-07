@@ -10,7 +10,8 @@ http.createServer((req, res) => {
             if (err) throw err;
 
             let oldpath = `${files.fileupload[0].filepath}`;
-            let newpath = 'C:/Users/DELL/Downloads/' + files.fileupload[0].originalFilename;
+            // let newpath = 'C:/Users/DELL/Downloads/' + files.fileupload[0].originalFilename;
+            let newpath = process.env.USERPROFILE + "/Downloads/" + files.fileupload[0].originalFilename;
             
             fs.rename(oldpath, newpath, (err) => {
                 if (err) throw err;
