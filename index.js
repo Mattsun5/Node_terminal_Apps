@@ -10,9 +10,9 @@ app.get('/', (req, res) => {
     const log = `${Date.now()}: ${req.url} sent a ${req.method} request`
     fs.appendFile('log.txt', log, () => {
         if (req.query.name) {
-            res.end(`Welcome ${req.query.name}`)
+            return res.send(`Welcome ${req.query.name}`)
         } else {
-            res.end('Welcome')
+            return res.send('Welcome')
         }
     })
 })
