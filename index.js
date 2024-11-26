@@ -7,7 +7,7 @@ const port = 8000;
 
 // 
 mongoose
-    .connect("mongodb+srv://Mattsun_dev:AV8mteGMZKEKpf2F@my-mongo-cluster.glake.mongodb.net/exampleDB")
+    .connect("")
     .then(() => {console.log('database connected!')})
     .catch((err) => {
         console.log(`unable to connect to db: ${err}`)
