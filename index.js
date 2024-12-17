@@ -2,48 +2,40 @@ const fs = require('fs');
 const express = require('express');
 const mongoose = require('mongoose');
 
+const connection = require('./connection');
+const { logReqRes } = require('./middlewares')
+const userRouter = require('./routes/user');
+
 const app = express();
 const port = 8000;
 
 // 
-mongoose
-    .connect("")
+
+
+// DB connection 
+connection("************")
     .then(() => {console.log('database connected!')})
     .catch((err) => {
         console.log(`unable to connect to db: ${err}`)
-    })
-const userSchema = mongoose.Schema({
-        "first_name": {
-            type: String, 
-            required: true
-        },
-        "last_name": {
-            type: String, 
-            required: true
-        },
-        "email": {
-            type: String, 
-            required: true,
-            unique: true
-        },
-        "gender": {
-            type: String, 
-            required: true
-        },
-        "occupation": String
-    },
-    {timestamps: true}
-);
-const User = mongoose.model('user', userSchema);
+    });
 
-const users = require('./MOCK_DATA.json');
-const { stringify } = require('querystring');
+// mock json file
+// const users = require('./MOCK_DATA.json');
+// const { stringify } = require('querystring');
 
 // json form format
 // app.use(bodyParser.json());
 
 // x-www-form-urlencoded format -> encoded body
 app.use(express.urlencoded({ extended: true}))
+
+// logging request 
+// app.use(logReqRes('log.txt'));
+
+// user router
+app.use('/api/users', userRouter);
+
+
 // To do 
 /**
  * Get all users in html and json *
@@ -55,120 +47,13 @@ app.use(express.urlencoded({ extended: true}))
  */
 
 // rewrite user
-const rewriteUser = () => {
-    fs.writeFile('MOCK_DATA.json', JSON.stringify(users), (err) => {
-        if (err) return err;
-    })
-}
+// const rewriteUser = () => {
+//     fs.writeFile('MOCK_DATA.json', JSON.stringify(users), (err) => {
+//         if (err) return err;
+//     })
+// }
 
-// all users json
-app.get('/api/users', (req, res) => {
-    return res.json(users);
-})
 
-// all users using SSR(server side rendering) for HTML
-app.get('/users', (req, res) => {
-    let html = '<ul>';
-    users.map((user) => {
-        html += `<li>${user.first_name}</li>`;
-    })
-    html += '</ul>';
-    return res.send(html);
-})
-
-// single user json
-app.get('/api/users/:id', (req, res) => {
-    const id = Number(req.params.id);
-    const user = users.find((user) => user.id === id);
-    if (!user){
-        return res.status(400).json({msg: 'user not found'});
-    }
-    return res.json(user);
-})
-
-//single user SSR for html
-app.route('/users/:id')
-    .get((req, res) => {
-        const id = Number(req.params.id);
-        const user = users.find((user) => user.id === id);
-        let html = '';
-        if (user){
-            html += `<p>My name is ${user.first_name}, I am a ${user.occupation}.</P>`;
-        } else {
-            res.status(400);
-            html += 'User does not exist';
-        }
-        res.setHeader("x-name", "Matthew"); //custom header
-        return res.send(html);
-    })
-    .delete((req, res) => {
-        const id = Number(req.params.id);
-        const user = users.find((user) => user.id === id);
-        let html = '';
-        if (user) {
-            const userIndex = users.indexOf(user);
-            users.splice(userIndex, 1);
-            rewriteUser();
-            html += `${userIndex + 1}, ${user.first_name} deleted successfully`;
-        } else {
-            res.status(400);
-            html += `user not found`;
-        }
-        return res.send(html);
-    })
-
-app.post('/register', async (req, res) => {
-
-    // const newUser = {
-    //     "id": users.length + 1,
-    //     "first_name": req.body.first_name,
-    //     "last_name": req.body.last_name,
-    //     "email": req.body.email,
-    //     "gender": req.body.gender,
-    //     "occupation": req.body.occupation
-    // }
-    const newDoc = new User({
-        "first_name": req.body.first_name,
-        "last_name": req.body.last_name,
-        "email": req.body.email,
-        "gender": req.body.gender,
-        "occupation": req.body.occupation
-    });
-    await newDoc.save()
-        .then((result) => {
-            console.log(result);
-            return res.status(201).send(`successful`);
-        })
-        .catch((err) => {
-            return res.status(400).send(err);
-        });
-
-    // SINCE FIELD NAMES TALLY, WE CAN ALSO USE
-    // get last user ID
-
-    // const lastUser = users.length - 1;
-    // new user ID
-    // const newUserId = users[lastUser].id + 1;
-    // const newUser = { "id": newUserId, ...req.body}
-    
-
-    // users.push(newUser);
-    // rewriteUser();
-    
-})
-    
-
-// using express 
-app.get('/', (req, res) => {
-    const log = `${Date.now()}: ${req.url} sent a ${req.method} request`
-    fs.appendFile('log.txt', log, () => {
-        if (req.query.name) {
-            return res.send(`Welcome ${req.query.name}`)
-        } else {
-            return res.send('Welcome')
-        }
-    })
-})
 
 
 app.listen(port, () => {
